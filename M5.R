@@ -1,4 +1,4 @@
-git pull origin main
+#git pull origin main
 ################################## PACOTES #####################################
 library(data.table)
 library(caret)
