@@ -184,5 +184,3 @@ anova(regre_no_terminal_1.1)
 summary(regre_no_terminal_1.1)
 
 ############ CRESCIMENTO RECURSIVO A PARTIR DE NÓ INTERNO 1.1 #################
-
-steste############ CRESCIMENTO RECURSIVO A PARTIR DE NÓ INTERNO 1.1 #################
