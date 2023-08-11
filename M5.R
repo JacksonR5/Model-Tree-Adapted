@@ -37,7 +37,8 @@ FUNCTION_PARTICOES = function(CONJUNTO_ORDENADO, var_independente) {
 particoes_D = FUNCTION_PARTICOES(CONJUNTO1_ORDENADO_PARA_D, "D")
 particoes_H = FUNCTION_PARTICOES(CONJUNTO1_ORDENADO_PARA_H, "H")
 
-################### CALCULAR MÁXIMA REDUÇÃO DE VARIÂNCIA #######################
+#CALCULAR MÁXIMA REDUÇÃO DE VARIÂNCIA PARA TODAS PARTIÇÕES DE CADA VARIÁVEL INDEPENDENTE############################
+
 calcular_maxima_reducao_variancia = function(subconjunto1, subconjunto2) {
   variância_total = var(trainingSet$V)
   proporcao_subconjunto1 = nrow(subconjunto1) / nrow(trainingSet)
@@ -104,7 +105,7 @@ if (!is.null(indice_melhor_particao_H)) {
   print(melhor_particao_objeto_H)
 }
 
-########################## NÓ INTERNO E NÓ TERMINAL ############################
+################################ MELHOR PARTIÇÃO ###############################
 melhor_particao = NULL
 
 if (melhor_reducao_D > melhor_reducao_H) {
@@ -116,14 +117,15 @@ if (melhor_reducao_D > melhor_reducao_H) {
 }
 
 melhor_particao
-#REGRESSÃO NÓ TERMINAL DERIVADO DO NÓ-RAIZ
+
+############## REGRESSÃO NO NÓ TERMINAL DERIVADO DO NÓ-RAIZ ####################
 no_terminal_raiz = melhor_particao$subconjunto2
 
 regre_no_terminal_raiz = lm(log(V) ~ log(D) + log(H), data = no_terminal_raiz)
 anova(regre_no_terminal_raiz)
 summary(regre_no_terminal_raiz)
 
-############ CRESCIMENTO RECURSIVO A PARTIR DE NÓ-INTERNO RAIZ #################
+###### CRESCIMENTO RECURSIVO A PARTIR DE NÓ-INTERNO DERIVADO DO NÓ RAIZ ########
 
 no_interno_raiz = melhor_particao$subconjunto1
 CONJUNTO1.1_ORDENADO_PARA_D = no_interno_raiz %>% arrange(desc(D))
@@ -165,20 +167,23 @@ if (!is.null(indice_melhor_particao_H)) {
 melhor_particao1.1 = NULL
 
 if (melhor_reducao_D > melhor_reducao_H) {
-  cat("A melhor partição é a D\n")
+  cat("A melhor partição fica na variável independente D\n")
   melhor_particao1.1 = melhor_particao_objeto_D
 } else {
-  cat("A melhor partição é a H\n")
+  cat("A melhor partição fica na variável independente H\n")
   melhor_particao1.1 = melhor_particao_objeto_H
 }
 
 melhor_particao1.1
 
-##################### NÓ TERMINAL DERIVADO DO NÓ INTERNO 1.1 ######################
+##################### NÓ TERMINAL DERIVADO DO NÓ INTERNO 1.1 ###################
 no_terminal_1.1 = melhor_particao1.1$subconjunto2
 
+########### REGRESSÃO NO NÓ TERMINAL DERIVADO DO NÓ INTERNO 1.1 ################
 regre_no_terminal_1.1 = lm(log(V) ~ log(D) + log(H), data = no_terminal_1.1)
 anova(regre_no_terminal_1.1)
 summary(regre_no_terminal_1.1)
 
-############ CRESCIMENTO RECURSIVO A PARTIR DE NÓ INTERNO 1.1 #################
+############ CRESCIMENTO RECURSIVO A PARTIR DO NÓ INTERNO 1.1 #################
+no_interno_1.1 = melhor_particao1.1$subconjunto1
+no_interno_1.1
