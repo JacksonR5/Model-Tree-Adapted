@@ -4,17 +4,40 @@ library(data.table)
 library(caret)
 library(dplyr)
 
-# Carregar dados
+#################################### DATA ######################################
 data = fread("C:\\Users\\cyber\\OneDrive - UNINTER - Aluno\\OneDrive\\ARTIGO\\PIBIC\\data.csv", stringsAsFactor=TRUE)
 data$D = data$D / 100 # Convertendo centímetros para metros
-
 # DIVIDIR TREINO E TESTE
 set.seed(100)
 trainIndex = createDataPartition(y = data$V, p = 0.70, list = FALSE)
 trainingSet = data[trainIndex, ]
 testSet = data[-trainIndex, ]
 
-# Função para calcular a máxima redução de variância
+######################## NÓ RAIZ PARA CADA VARIÁVEL INDEPENDENTE ###############
+CONJUNTO1_ORDENADO_PARA_D = trainingSet %>% arrange(desc(D))
+CONJUNTO1_ORDENADO_PARA_H = trainingSet %>% arrange(desc(H))
+
+############# GERAR TODAS PARTIÇÕES POSSÍVEIS A PARTIR DO NÓ RAÍZ ##############
+
+FUNCTION_PARTICOES = function(CONJUNTO_ORDENADO, var_independente) {
+  PARTICOES = list()
+  num_max_linhas = nrow(CONJUNTO_ORDENADO)
+  
+  for (i in 0:num_max_linhas) {
+    subconjunto1 = CONJUNTO_ORDENADO[1:i, ]
+    subconjunto2 = CONJUNTO_ORDENADO[(i + 1):num_max_linhas, ]
+    
+    particao = list(subconjunto1 = subconjunto1, subconjunto2 = subconjunto2)
+    PARTICOES[[length(PARTICOES) + 1]] = particao
+  }
+  
+  return(PARTICOES)
+}
+
+particoes_D = FUNCTION_PARTICOES(CONJUNTO1_ORDENADO_PARA_D, "D")
+particoes_H = FUNCTION_PARTICOES(CONJUNTO1_ORDENADO_PARA_H, "H")
+
+################### CALCULAR MÁXIMA REDUÇÃO DE VARIÂNCIA #######################
 calcular_maxima_reducao_variancia = function(subconjunto1, subconjunto2) {
   variância_total = var(trainingSet$V)
   proporcao_subconjunto1 = nrow(subconjunto1) / nrow(trainingSet)
@@ -33,23 +56,7 @@ calcular_maxima_reducao_variancia = function(subconjunto1, subconjunto2) {
   return(list(maxima_reducao_variancia_D, maxima_reducao_variancia_H))
 }
 
-# Função para gerar todas as partições possíveis
-FUNCTION_PARTICOES = function(CONJUNTO_ORDENADO, var_independente) {
-  PARTICOES = list()
-  num_max_linhas = nrow(CONJUNTO_ORDENADO)
-  
-  for (i in 0:num_max_linhas) {
-    subconjunto1 = CONJUNTO_ORDENADO[1:i, ]
-    subconjunto2 = CONJUNTO_ORDENADO[(i + 1):num_max_linhas, ]
-    
-    particao = list(subconjunto1 = subconjunto1, subconjunto2 = subconjunto2)
-    PARTICOES[[length(PARTICOES) + 1]] = particao
-  }
-  
-  return(PARTICOES)
-}
-
-# Avaliar e obter a melhor partição
+######################## MELHORES PARTIÇÕES PARA D E H #########################
 avaliar_particoes = function(particoes, var_independente) {
   melhor_reducao = -Inf
   indice_melhor_particao = NULL
@@ -68,13 +75,6 @@ avaliar_particoes = function(particoes, var_independente) {
   
   return(list(melhor_reducao, indice_melhor_particao, melhor_particao))
 }
-
-######################## MELHORES PARTIÇÕES PARA D E H #########################
-# Gerar partições para variável D e H
-CONJUNTO1_ORDENADO_PARA_D = trainingSet %>% arrange(desc(D))
-CONJUNTO1_ORDENADO_PARA_H = trainingSet %>% arrange(desc(H))
-particoes_D = FUNCTION_PARTICOES(CONJUNTO1_ORDENADO_PARA_D, "D")
-particoes_H = FUNCTION_PARTICOES(CONJUNTO1_ORDENADO_PARA_H, "H")
 
 # Avaliar e obter a melhor partição para variável D
 melhor_particao_D = avaliar_particoes(particoes_D, "D")
@@ -116,15 +116,14 @@ if (melhor_reducao_D > melhor_reducao_H) {
 }
 
 melhor_particao
-
-##################### NÓ TERMINAL DERIVADO DO NÓ RAIZ ######################
+#REGRESSÃO NÓ TERMINAL DERIVADO DO NÓ-RAIZ
 no_terminal_raiz = melhor_particao$subconjunto2
 
 regre_no_terminal_raiz = lm(log(V) ~ log(D) + log(H), data = no_terminal_raiz)
 anova(regre_no_terminal_raiz)
 summary(regre_no_terminal_raiz)
 
-############ CRESCIMENTO RECURSIVO A PARTIR DE NÓ INTERNO RAIZ #################
+############ CRESCIMENTO RECURSIVO A PARTIR DE NÓ-INTERNO RAIZ #################
 
 no_interno_raiz = melhor_particao$subconjunto1
 CONJUNTO1.1_ORDENADO_PARA_D = no_interno_raiz %>% arrange(desc(D))
@@ -134,7 +133,7 @@ CONJUNTO1.1_ORDENADO_PARA_H = no_interno_raiz %>% arrange(desc(H))
 particoes_D = FUNCTION_PARTICOES(CONJUNTO1.1_ORDENADO_PARA_D, "D")
 particoes_H = FUNCTION_PARTICOES(CONJUNTO1.1_ORDENADO_PARA_H, "H")
 
-#################### MELHORES PARTIÇÕES PARA D E H 1.1 #####################
+############### MELHORES PARTIÇÕES A PARTIR DO NÓ-INTERNO RAIZ  ################
 # Avaliar e obter a melhor partição para variável D
 melhor_particao_D = avaliar_particoes(particoes_D, "D")
 melhor_reducao_D = melhor_particao_D[[1]]
@@ -174,7 +173,6 @@ if (melhor_reducao_D > melhor_reducao_H) {
 }
 
 melhor_particao1.1
-
 
 ##################### NÓ TERMINAL DERIVADO DO NÓ INTERNO 1.1 ######################
 no_terminal_1.1 = melhor_particao1.1$subconjunto2
