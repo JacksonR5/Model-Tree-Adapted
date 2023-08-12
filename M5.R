@@ -187,3 +187,7 @@ summary(regre_no_terminal_1.1)
 ############ CRESCIMENTO RECURSIVO A PARTIR DO NÓ INTERNO 1.1 #################
 no_interno_1.1 = melhor_particao1.1$subconjunto1
 no_interno_1.1
+########### REGRESSÃO NO NÓ TERMINAL DERIVADO DO NÓ INTERNO 1.1 ################
+regre_no_terminal_1.1 = lm(log(V) ~ log(D) + log(H), data = no_interno_1.1)
+anova(regre_no_terminal_1.1)
+summary(regre_no_terminal_1.1)
