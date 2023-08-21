@@ -204,67 +204,47 @@ summary(regre_no_terminal_1.1.2)
 
 
 ############################## PREDIÇÃO ########################################
+# Definir limiares para as diferentes divisões dos nós
+limiar_raiz = 0.140 #valor
+limiar_terminal1.1.1 = 0.186
+limiar_terminal1.1.2 = 0.184
 
-# Para cada variável dependente no conjunto testSet, realize previsões
-predicted_values_raiz <- c()  # Armazenar as previsões do Nó Terminal Raiz
-predicted_values_1.1 <- c()    # Armazenar as previsões do Nó Terminal 1.1
-predicted_values_1.2 <- c()    # Armazenar as previsões do Nó Terminal 1.2
+# Realizar previsões no conjunto testSet
+predictions_testSet = numeric(length = nrow(testSet))  # Inicializar vetor de previsões
 
 for (i in 1:nrow(testSet)) {
-  row <- testSet[i, ]
+  row = testSet[i, ]  # Selecionar a linha atual do conjunto de teste
   
-  # Previsão a partir do Nó Terminal Raiz
-  predicted_value_raiz <- exp(predict(regre_no_terminal_raiz, newdata = row))
-  predicted_values_raiz <- c(predicted_values_raiz, predicted_value_raiz)
-  
-  # Verificar qual nó terminal usar para o Nó Interno 1.1
-  if (row$D > melhor_particao1.1$subconjunto1$D[1]) {
-    # Previsão a partir do Nó Terminal 1.1
-    predicted_value_1.1 <- exp(predict(regre_no_terminal_1.1, newdata = row))
-    predicted_values_1.1 <- c(predicted_values_1.1, predicted_value_1.1)
-    
-    # Verificar qual nó terminal usar para o Nó Interno 1.2
-    if (row$H > melhor_particao1.1$subconjunto2$H[1]) {
-      # Previsão a partir do Nó Terminal 1.2
-      predicted_value_1.2 <- exp(predict(regre_no_terminal_1.2, newdata = row))
-      predicted_values_1.2 <- c(predicted_values_1.2, predicted_value_1.2)
-    } else {
-      # Previsão a partir do Nó Terminal 1.3 (caso Nó Interno 1.2 não seja selecionado)
-      predicted_value_1.3 <- exp(predict(regre_no_terminal_1.3, newdata = row))
-      predicted_values_1.2 <- c(predicted_values_1.2, predicted_value_1.3)
-    }
+  if (row$D < limiar_raiz) {
+    # Usar modelo do nó-raiz
+    predictions_testSet[i] = predict(regre_no_terminal_raiz, newdata = list(D = row$D, H = row$H))
+  } else if (row$D < limiar_terminal1.1.1) {
+    # Usar modelo do nó-terminal1.1.1
+    predictions_testSet[i] = predict(regre_no_terminal_1.1.1, newdata = list(D = row$D, H = row$H))
+  } else if (row$D < limiar_terminal1.1.2) {
+    # Usar modelo do nó-terminal1.1.2
+    predictions_testSet[i] = predict(regre_no_terminal_1.1.2, newdata = list(D = row$D, H = row$H))
+  } else {
+    # Usar modelo do último nó
+    predictions_testSet[i] = predict(regre_no_terminal_1.1, newdata = list(D = row$D, H = row$H))
   }
 }
 
-# Calcular R² para as previsões do Nó Terminal Raiz
-actual_values <- testSet$V
-rss_raiz <- sum((actual_values - predicted_values_raiz)^2)
-tss <- sum((actual_values - mean(actual_values))^2)
-rsquared_raiz <- 1 - (rss_raiz / tss)
-cat("R² for Nó Terminal Raiz:", rsquared_raiz, "\n")
+# Calcular R² e RMSE das previsões no conjunto testSet
+actual_values = exp(testSet$V)  # Utilizar valores reais (não log-transformados)
+predicted_values = predictions_testSet  # Valores previstos já calculados
 
-# Calcular RMSE para as previsões do Nó Terminal Raiz
-rmse_raiz <- sqrt(mean((actual_values - predicted_values_raiz)^2))
-cat("RMSE for Nó Terminal Raiz:", rmse_raiz, "\n")
+# Calcular R²
+mean_actual = mean(actual_values)
+sst = sum((actual_values - mean_actual)^2)
+ssr = sum((actual_values - predicted_values)^2)
+r_squared = 1 - ssr / sst
 
-# Calcular R² para as previsões do Nó Terminal 1.1 (se aplicável)
-if (length(predicted_values_1.1) > 0) {
-  rss_1.1 <- sum((actual_values - predicted_values_1.1)^2)
-  rsquared_1.1 <- 1 - (rss_1.1 / tss)
-  cat("R² for Nó Terminal 1.1:", rsquared_1.1, "\n")
-  
-  # Calcular RMSE para as previsões do Nó Terminal 1.1
-  rmse_1.1 <- sqrt(mean((actual_values - predicted_values_1.1)^2))
-  cat("RMSE for Nó Terminal 1.1:", rmse_1.1, "\n")
-}
+# Calcular RMSE
+rmse = sqrt(mean((actual_values - predicted_values)^2))
 
-# Calcular R² para as previsões do Nó Terminal 1.2 (se aplicável)
-if (length(predicted_values_1.2) > 0) {
-  rss_1.2 <- sum((actual_values - predicted_values_1.2)^2)
-  rsquared_1.2 <- 1 - (rss_1.2 / tss)
-  cat("R² for Nó Terminal 1.2:", rsquared_1.2, "\n")
-  
-  # Calcular RMSE para as previsões do Nó Terminal 1.2
-  rmse_1.2 <- sqrt(mean((actual_values - predicted_values_1.2)^2))
-  cat("RMSE for Nó Terminal 1.2:", rmse_1.2, "\n")
-}
+# Exibir os resultados de R² e RMSE
+cat("\nResultados de Avaliação:\n")
+cat("Coeficiente de Determinação (R²):", r_squared, "\n")
+cat("Raiz Quadrada Média do Erro (RMSE):", rmse, "\n")
+
