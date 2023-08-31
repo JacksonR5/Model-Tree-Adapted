@@ -1,9 +1,12 @@
 #git pull origin main
 ################################## PACOTES #####################################
-library(data.table)
-library(caret)
-library(dplyr)
-
+require(data.table)
+require(caret)
+require(dplyr)
+require(kableExtra) #CRIAÇÃO DE TABELAS
+require(knitr)
+#devtools::install_github("haozhu233/kableExtra")
+install.packages("kableExtra")
 #################################### DATA ######################################
 #data = fread("C:\\Users\\cyber\\OneDrive - UNINTER - Aluno\\OneDrive\\ARTIGO\\PIBIC\\data.csv", stringsAsFactor=TRUE)
 data = data
@@ -111,8 +114,6 @@ if (!is.null(indice_melhor_particao_H)) {
   exibir_detalhes_particao("H", melhor_reducao_H, indice_melhor_particao_H, melhor_particao_objeto_H)
 }
 
-
-
 ################################ MELHOR PARTIÇÃO ###############################
 melhor_particao = NULL
 
@@ -131,6 +132,10 @@ no_terminal_raiz = melhor_particao$subconjunto2
 regre_no_terminal_raiz = lm(log(V) ~ log(D) + log(H), data = no_terminal_raiz)
 anova(regre_no_terminal_raiz)
 summary(regre_no_terminal_raiz)
+
+regression_table <- summary(regre_no_terminal_raiz)
+kbl(regression_table$coefficients) %>%
+  kable_styling()
 
 ###### CRESCIMENTO RECURSIVO A PARTIR DE NÓ-INTERNO DERIVADO DO NÓ RAIZ ########
 no_interno_raiz = melhor_particao$subconjunto1
