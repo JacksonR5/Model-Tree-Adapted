@@ -207,26 +207,20 @@ regre_no_terminal_1.1.2 = lm(log(V) ~ log(D) + log(H), data = no_interno_1.1.2)
 anova(regre_no_terminal_1.1.2)
 summary(regre_no_terminal_1.1.2)
 
-
 ############################## PREDIÇÃO ########################################
-# Definir limiares para as diferentes divisões dos nós
-limiar_raiz = 0.140 #valor
-limiar_terminal1.1.1 = 0.186
-limiar_terminal1.1.2 = 0.184
-
 # Realizar previsões no conjunto testSet
 predictions_testSet = numeric(length = nrow(testSet))  # Inicializar vetor de previsões
 
 for (i in 1:nrow(testSet)) {
   row = testSet[i, ]  # Selecionar a linha atual do conjunto de teste
   
-  if (row$D < limiar_raiz) {
+  if (row$D <= 0.140) {
     # Usar modelo do nó-raiz
     predictions_testSet[i] = predict(regre_no_terminal_raiz, newdata = list(D = row$D, H = row$H))
-  } else if (row$D < limiar_terminal1.1.1) {
+  } else if (row$D >= 0.140 && row$D <= 0.186) {
     # Usar modelo do nó-terminal1.1.1
     predictions_testSet[i] = predict(regre_no_terminal_1.1.1, newdata = list(D = row$D, H = row$H))
-  } else if (row$D < limiar_terminal1.1.2) {
+  } else if (row$D > 0.186) {
     # Usar modelo do nó-terminal1.1.2
     predictions_testSet[i] = predict(regre_no_terminal_1.1.2, newdata = list(D = row$D, H = row$H))
   } else {
@@ -235,11 +229,12 @@ for (i in 1:nrow(testSet)) {
   }
 }
 
-# Calcular R² e RMSE das previsões no conjunto testSet
-actual_values = exp(testSet$V)  # Utilizar valores reais (não log-transformados)
-predicted_values = predictions_testSet  # Valores previstos já calculados
+#################
+# Converter previsões de volta para a escala original
+predicted_values = exp(predictions_testSet)
 
 # Calcular R²
+actual_values = testSet$V
 mean_actual = mean(actual_values)
 sst = sum((actual_values - mean_actual)^2)
 ssr = sum((actual_values - predicted_values)^2)
@@ -252,4 +247,5 @@ rmse = sqrt(mean((actual_values - predicted_values)^2))
 cat("\nResultados de Avaliação:\n")
 cat("Coeficiente de Determinação (R²):", r_squared, "\n")
 cat("Raiz Quadrada Média do Erro (RMSE):", rmse, "\n")
+
 
