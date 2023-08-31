@@ -125,7 +125,6 @@ if (melhor_reducao_D > melhor_reducao_H) {
   melhor_particao = melhor_particao_objeto_H
 }
 
-
 ############## REGRESSÃO NO NÓ TERMINAL DERIVADO DO NÓ-RAIZ ####################
 no_terminal_raiz = melhor_particao$subconjunto2
 
